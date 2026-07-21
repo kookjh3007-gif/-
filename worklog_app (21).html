@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주간업무일지</title>
+<style>
+  :root{
+    --navy:#1F3A5F;
+    --navy-deep:#132844;
+    --teal:#1F6E6E;
+    --paper:#F7F5F0;
+    --line:#D8D3C6;
+    --ink:#26241E;
+    --muted:#6B6558;
+    --red:#B23A2F;
+    --card:#FFFFFF;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    background:var(--navy-deep);
+    color:#fff;
+    padding:18px 24px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  header h1{
+    font-size:19px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:0.02em;
+  }
+  header .sub{
+    font-size:12px;
+    color:#B9C6D6;
+  }
+  nav{
+    display:flex;
+    background:var(--navy);
+    border-bottom:2px solid var(--navy-deep);
+  }
+  nav button{
+    flex:1;
+    padding:12px 8px;
+    background:transparent;
+    border:none;
+    color:#CBD6E3;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+  }
+  nav button.active{
+    color:#fff;
+    border-bottom:3px solid var(--red);
+    background:rgba(255,255,255,0.06);
+  }
+  main{
+    max-width:840px;
+    margin:0 auto;
+    padding:20px 16px 60px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-size:14px;
+    margin:0 0 14px;
+    padding-bottom:8px;
+    border-bottom:2px solid var(--teal);
+    color:var(--teal);
+    letter-spacing:0.03em;
+  }
+  .row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  label{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:4px;
+    font-weight:600;
+  }
+  input,select,textarea{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    font-size:14px;
+    font-family:inherit;
+    background:#fff;
+    color:var(--ink);
+  }
+  textarea{min-height:64px;resize:vertical;}
+  input:focus,select:focus,textarea:focus{
+    outline:none;
+    border-color:var(--navy);
+    box-shadow:0 0 0 3px rgba(31,58,95,0.12);
+  }
+  .full{grid-column:1 / -1;}
+  .btn{
+    padding:10px 18px;
+    border:none;
+    border-radius:var(--radius);
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-primary:hover{background:var(--navy-deep);}
+  .btn-outline{background:#fff;color:var(--navy);border:1px solid var(--navy);}
+  .btn-danger{background:#fff;color:var(--red);border:1px solid var(--red);}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .status{
+    font-size:12px;
+    margin-top:10px;
+    padding:8px 10px;
+    border-radius:var(--radius);
+    display:none;
+  }
+  .status.ok{display:block;background:#EAF3EE;color:#1F6E4A;border:1px solid #BFE0CC;}
+  .status.err{display:block;background:#FBEAE8;color:var(--red);border:1px solid #EFC5C0;}
+  .status.wait{display:block;background:#F0F1EC;color:var(--muted);border:1px solid var(--line);}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top;}
+  th{background:var(--teal);color:#fff;font-weight:600;font-size:12px;}
+  tr:nth-child(even) td{background:#FBFAF7;}
+  .cat-tag{
+    display:inline-block;
+    padding:2px 8px;
+    background:var(--navy);
+    color:#fff;
+    border-radius:10px;
+    font-size:11px;
+    font-weight:600;
+  }
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .filters select{width:auto;min-width:120px;}
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    padding:30px 10px;
+    font-size:13px;
+  }
+  .cat-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  .cat-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:4px 10px;
+    font-size:12px;
+  }
+  .cat-chip button{
+    background:none;border:none;color:var(--red);cursor:pointer;font-weight:700;padding:0;font-size:13px;
+  }
+  .hint{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;}
+  code{
+    background:#F0EEE7;
+    padding:1px 5px;
+    border-radius:3px;
+    font-size:12px;
+  }
+  @media (max-width:520px){
+    .row{grid-template-columns:1fr;}
+  }
+
+  .write-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  .write-table th{
+    background:var(--teal);
+    color:#fff;
+    font-size:12px;
+    padding:8px;
+    border:1px solid var(--line);
+  }
+  .write-table td{
+    border:1px solid var(--line);
+    padding:6px;
+    vertical-align:top;
+  }
+  .write-table td.rep-cat{
+    text-align:center;
+    font-weight:700;
+    background:var(--paper);
+    vertical-align:middle;
+    font-size:13px;
+    padding:8px 4px;
+  }
+  .rich-input{
+    min-height:150px;
+    max-height:400px;
+    overflow-y:auto;
+    overflow-x:auto;
+    padding:8px;
+    font-size:14px;
+    font-family:inherit;
+    outline:none;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .rich-input:focus{box-shadow:inset 0 0 0 1px var(--navy);border-radius:3px;}
+  .rich-input:empty:before{
+    content:attr(data-placeholder);
+    color:#A6A091;
+  }
+  .rich-input img{
+    max-width:100%;
+    display:block;
+    margin:6px 0;
+    border:1px solid var(--line);
+    border-radius:3px;
+  }
+  .img-resizable{
+    display:inline-block;
+    position:relative;
+    resize:both;
+    overflow:hidden;
+    border:1px solid var(--line);
+    border-radius:3px;
+    margin:6px 0;
+    max-width:100%;
+    min-width:60px;
+    min-height:40px;
+  }
+  .img-resizable img{
+    width:100%;
+    height:100%;
+    display:block;
+    margin:0;
+    border:none;
+    object-fit:contain;
+  }
+  #imgToolbar{
+    display:none;
+    position:fixed;
+    z-index:1000;
+  }
+  .img-toolbar{
+    display:flex;
+    gap:2px;
+    background:var(--navy-deep);
+    border-radius:4px;
+    padding:3px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.25);
+  }
+  .img-toolbar button{
+    border:none;
+    background:transparent;
+    color:#fff;
+    font-size:13px;
+    font-weight:700;
+    width:24px;
+    height:24px;
+    line-height:24px;
+    padding:0;
+    cursor:pointer;
+    border-radius:3px;
+  }
+  .img-toolbar button:hover{background:rgba(255,255,255,0.2);}
+
+  .report-sheet{
+    background:#fff;
+    border:1px solid var(--line);
+    padding:1.6em;
+    font-size:13px;
+  }
+  .report-title{
+    text-align:center;
+    font-size:1.7em;
+    font-weight:800;
+    letter-spacing:0.02em;
+    margin-bottom:0.35em;
+  }
+  .report-date{
+    text-align:right;
+    font-size:0.9em;
+    color:var(--muted);
+    margin-bottom:0.5em;
+  }
+  .report-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:1em;}
+  .report-table th{
+    background:#EDEBE3;
+    border:1px solid #444;
+    padding:0.55em;
+    font-size:1em;
+    font-weight:700;
+  }
+  .report-table th:first-child{width:16%;}
+  .report-table td{
+    border:1px solid #444;
+    padding:0.6em 0.55em;
+    font-size:1em;
+    vertical-align:top;
+    line-height:1.5;
+  }
+  .rep-cat{
+    text-align:center;
+    font-weight:700;
+    background:#F7F5F0;
+    vertical-align:middle !important;
+  }
+  .rep-cell{min-height:0;}
+  .mini-table{
+    width:100%;
+    border-collapse:collapse;
+    margin:0.3em 0 0.5em;
+    font-size:0.9em;
+  }
+  .mini-table th,.mini-table td{
+    border:1px solid var(--line);
+    padding:0.25em 0.5em;
+    text-align:left;
+  }
+  .mini-table th{
+    background:var(--paper);
+    font-weight:700;
+  }
+  .entry-block{margin-bottom:0.5em;}
+  .entry-block:last-child{margin-bottom:0;}
+  .report-sheet .img-resizable{resize:none;}
+
+  @media print{
+    @page{ margin:10mm; }
+    header, nav, .btn-row, .hint, h2 { display:none !important; }
+    main{padding:0;max-width:none;}
+    .card{border:none;padding:0;margin:0;}
+    #reportCard > .row{display:none;}
+    body{background:#fff;}
+    .report-sheet{border:none;padding:0;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="appTitle">주간업무일지</h1>
+  <span class="sub" id="syncBadge">시트 연동 안 됨</span>
+</header>
+
+<nav>
+  <button class="tab-btn active" data-tab="write">작성</button>
+  <button class="tab-btn" data-tab="list">목록</button>
+  <button class="tab-btn" data-tab="admin">관리자</button>
+</nav>
+
+<main>
+
+  <!-- 작성 탭 -->
+  <section id="tab-write">
+    <div class="card">
+      <h2>기본 정보</h2>
+      <div class="row">
+        <div>
+          <label>작성자</label>
+          <input type="text" id="f-author" placeholder="이름">
+        </div>
+        <div>
+          <label>부서</label>
+          <input type="text" id="f-dept" placeholder="부서명">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>주차</label>
+          <input type="week" id="f-week">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="loadForEdit()">기존 내용 불러오기</button>
+      </div>
+      <p class="hint">같은 작성자·주차로 이미 저장한 내용이 있으면 불러와서 수정할 수 있습니다. 수정 후 저장하면 기존 내용을 덮어씁니다.</p>
+    </div>
+
+    <div class="card">
+      <h2 id="writeCardTitle">행정실 주요업무 진행현황</h2>
+      <p class="hint">칸 안에 표를 넣으려면, 각 줄을 <code>|</code> 로 구분해서 입력하세요. 첫 줄은 표의 제목(헤더)이 됩니다.<br>
+      예) <code>품목 | 수량 | 비고</code> 다음 줄에 <code>보일러 | 2 | 점검완료</code><br>
+      또는 표 이미지를 캡처해서 <b>칸 안에 바로 붙여넣기(Ctrl+V)</b>도 가능합니다. (이미지는 Google Sheets에는 저장되지 않고 "[이미지]"로만 표시됩니다)</p>
+      <table class="write-table">
+        <thead><tr><th style="width:16%;">구분</th><th style="width:42%;">금주 진행</th><th style="width:42%;">차주 예정</th></tr></thead>
+        <tbody id="writeTableBody"></tbody>
+      </table>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="saveEntry()">저장</button>
+        <button class="btn btn-outline" onclick="clearForm()">전체 초기화</button>
+      </div>
+      <div class="status" id="saveStatus"></div>
+    </div>
+  </section>
+
+  <!-- 목록 탭 -->
+  <section id="tab-list" style="display:none;">
+    <div class="card" id="reportCard">
+      <h2>현황표</h2>
+      <div class="row">
+        <div>
+          <label>주차 선택</label>
+          <select id="report-week"></select>
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="renderReport()">현황표 만들기</button>
+            <button class="btn btn-outline" onclick="printReport()">인쇄 / PDF 저장</button>
+            <button class="btn btn-outline" onclick="exportCSV()">CSV 내보내기</button>
+          </div>
+        </div>
+      </div>
+      <div id="reportOutput" style="margin-top:14px;"></div>
+      <p class="hint">Google Sheets 연동이 설정되어 있으면, 이 목록은 이 컴퓨터뿐 아니라 <b>팀 전체가 작성한 최근 약 1개월(6주)치 자료</b>를 Google Sheets에서 직접 불러와 보여줍니다.</p>
+    </div>
+  </section>
+
+  <!-- 관리자 탭 -->
+  <section id="tab-admin" style="display:none;">
+    <div class="card">
+      <h2>Google Sheets 연동</h2>
+      <label>Apps Script 웹앱 URL</label>
+      <input type="text" id="a-url" placeholder="https://script.google.com/macros/s/.../exec">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveUrl()">URL 저장</button>
+        <button class="btn btn-outline" onclick="testConnection()">연결 테스트</button>
+      </div>
+      <div class="status" id="urlStatus"></div>
+      <p class="hint">
+        Apps Script 배포 방법은 아래 "설정 가이드"를 참고하세요.<br>
+        연동 URL을 저장하면, 이후 저장 시 자동으로 Google Sheets에도 함께 기록됩니다.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>구분 항목 관리</h2>
+      <div class="cat-list" id="catList"></div>
+      <div class="row">
+        <div>
+          <input type="text" id="a-newcat" placeholder="새 항목 이름">
+        </div>
+        <div>
+          <button class="btn btn-outline" onclick="addCategory()">항목 추가</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>작성자별 팀/업무구분 자동입력</h2>
+      <p class="hint">여기에 등록해두면, 작성 탭에서 작성자 이름을 입력했을 때 부서 칸이 자동으로 채워집니다.</p>
+      <div class="cat-list" id="authorMapList"></div>
+      <div class="row">
+        <div>
+          <input type="text" id="a-newauthor" placeholder="작성자 이름">
+        </div>
+        <div>
+          <input type="text" id="a-newdept" placeholder="팀/부서">
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="addAuthorMapping()">매핑 추가</button>
+    </div>
+
+    <div class="card">
+      <h2>제목 변경</h2>
+      <div class="row">
+        <div class="full">
+          <input type="text" id="a-title" placeholder="업무일지 제목">
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="saveTitle()">제목 저장</button>
+    </div>
+
+    <div class="card">
+      <h2>데이터 초기화</h2>
+      <p class="hint">저장된 모든 업무일지를 이 브라우저에서 삭제합니다. (Google Sheets 데이터는 유지됩니다)</p>
+      <button class="btn btn-danger" onclick="clearAllData()">전체 삭제</button>
+    </div>
+
+    <div class="card">
+      <h2>설정 가이드 (최초 1회)</h2>
+      <p class="hint">
+        ① <a href="https://script.google.com" target="_blank">script.google.com</a> 접속 → 새 프로젝트<br>
+        ② 아래 코드를 전체 붙여넣기 → 저장<br>
+        ③ 상단 "배포" → "새 배포" → 유형: 웹 앱 선택<br>
+        ④ 액세스 권한: <b>모든 사용자</b> 선택 → 배포 → 액세스 승인<br>
+        ⑤ 발급된 웹 앱 URL을 위 입력란에 붙여넣고 "URL 저장"
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="copyScript()">Apps Script 코드 복사</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="imgToolbar">
+  <div class="img-toolbar">
+    <button type="button" onmousedown="event.preventDefault()" onclick="adjustSelectedImage(0.85)" title="축소">－</button>
+    <button type="button" onmousedown="event.preventDefault()" onclick="adjustSelectedImage(1.15)" title="확대">＋</button>
+    <button type="button" onmousedown="event.preventDefault()" onclick="resetSelectedImage()" title="기본 크기로">↺</button>
+  </div>
+</div>
+
+<script>
+const STORAGE = {
+  entries: 'worklog_entries',
+  categories: 'worklog_categories',
+  url: 'worklog_appsScriptUrl',
+  title: 'worklog_title',
+  authorMap: 'worklog_authorMap'
+};
+
+const DEFAULT_CATS = ['행정관리','시설관리','미화','차량(배차,정비)','장소사용','재정','근태관리'];
+
+function load(key, fallback){
+  try{
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  }catch(e){ return fallback; }
+}
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+let entries = load(STORAGE.entries, []);
+let categories = load(STORAGE.categories, DEFAULT_CATS);
+let scriptUrl = load(STORAGE.url, '');
+let appTitle = load(STORAGE.title, '주간업무일지');
+let authorMap = load(STORAGE.authorMap, {});
+
+// ---------- init ----------
+document.getElementById('appTitle').textContent = appTitle;
+document.getElementById('writeCardTitle').textContent = appTitle;
+document.getElementById('a-title').value = appTitle;
+document.getElementById('a-url').value = scriptUrl;
+updateSyncBadge();
+renderWriteTable();
+renderCatAdmin();
+renderAuthorMapAdmin();
+renderList();
+
+// default week = this week
+(function(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const jan1 = new Date(y,0,1);
+  const week = Math.ceil((((d - jan1)/86400000) + jan1.getDay()+1)/7);
+  document.getElementById('f-week').value = `${y}-W${String(week).padStart(2,'0')}`;
+})();
+
+// 작성자 이름을 입력하면(포커스 벗어날 때) 등록된 팀/부서로 자동 채우기
+document.getElementById('f-author').addEventListener('blur', function(){
+  const name = this.value.trim();
+  if(name && authorMap[name]){
+    document.getElementById('f-dept').value = authorMap[name];
+  }
+});
+
+// ---------- tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    ['write','list','admin'].forEach(t=>{
+      document.getElementById('tab-'+t).style.display = (t===btn.dataset.tab)?'block':'none';
+    });
+    if(btn.dataset.tab==='list') renderList();
+  });
+});
+
+// ---------- 작성 탭 전체 양식 렌더 ----------
+function renderWriteTable(prefill){
+  prefill = prefill || {};
+  const body = document.getElementById('writeTableBody');
+  body.innerHTML = categories.map((c,i)=>{
+    const p = prefill[c] || {thisWeek:'',nextWeek:''};
+    return `
+    <tr>
+      <td class="rep-cat">${esc(c)}</td>
+      <td><div class="rich-input" id="w-this-${i}" contenteditable="true" data-placeholder="금주 진행 내용 (표 캡처 이미지 붙여넣기 가능)">${toEditableHtml(p.thisWeek)}</div></td>
+      <td><div class="rich-input" id="w-next-${i}" contenteditable="true" data-placeholder="차주 예정 내용">${toEditableHtml(p.nextWeek)}</div></td>
+    </tr>
+  `;
+  }).join('');
+  body.querySelectorAll('.rich-input').forEach(cell=> wrapLooseImages(cell));
+}
+
+// 크기 조절 컨테이너 없이 저장된(예전) 이미지를 조절 가능한 형태로 감싸기
+// ---------- 이미지 클릭 → 크기조절 버튼 툴바 ----------
+let selectedImgWrapper = null;
+
+document.addEventListener('click', function(e){
+  const wrapper = e.target.closest('.img-resizable');
+  const toolbar = document.getElementById('imgToolbar');
+  if(wrapper && wrapper.closest('.rich-input')){
+    selectedImgWrapper = wrapper;
+    positionImgToolbar(wrapper);
+  }else if(!e.target.closest('#imgToolbar')){
+    selectedImgWrapper = null;
+    toolbar.style.display = 'none';
+  }
+});
+
+window.addEventListener('scroll', function(){
+  document.getElementById('imgToolbar').style.display = 'none';
+  selectedImgWrapper = null;
+}, true);
+
+function positionImgToolbar(wrapper){
+  const toolbar = document.getElementById('imgToolbar');
+  const rect = wrapper.getBoundingClientRect();
+  toolbar.style.display = 'block';
+  toolbar.style.top = Math.max(4, rect.top - 34) + 'px';
+  toolbar.style.left = rect.left + 'px';
+}
+
+function adjustSelectedImage(factor){
+  if(!selectedImgWrapper) return;
+  const curW = selectedImgWrapper.offsetWidth || parseInt(selectedImgWrapper.style.width) || 200;
+  const curH = selectedImgWrapper.offsetHeight || parseInt(selectedImgWrapper.style.height) || 150;
+  const newW = Math.max(60, Math.min(700, Math.round(curW*factor)));
+  const newH = Math.max(40, Math.min(700, Math.round(curH*factor)));
+  selectedImgWrapper.style.width = newW+'px';
+  selectedImgWrapper.style.height = newH+'px';
+  positionImgToolbar(selectedImgWrapper);
+}
+
+function resetSelectedImage(){
+  if(!selectedImgWrapper) return;
+  const natW = parseInt(selectedImgWrapper.dataset.natw) || 260;
+  const natH = parseInt(selectedImgWrapper.dataset.nath) || 180;
+  const size = fitImageSize(natW, natH, 260, 220);
+  selectedImgWrapper.style.width = size.w+'px';
+  selectedImgWrapper.style.height = size.h+'px';
+  positionImgToolbar(selectedImgWrapper);
+}
+
+// 가로·세로 모두 제한선 안에 들어오도록 비율 유지하며 크기 계산
+function fitImageSize(w, h, maxW, maxH){
+  let scale = 1;
+  if(w > maxW) scale = Math.min(scale, maxW / w);
+  if(h * scale > maxH) scale = Math.min(scale, maxH / h);
+  return { w: Math.round(w * scale), h: Math.round(h * scale) };
+}
+
+function wrapLooseImages(container){
+  container.querySelectorAll('img').forEach(img=>{
+    if(img.parentElement && img.parentElement.classList.contains('img-resizable')) return;
+    const doWrap = ()=>{
+      const natW = img.naturalWidth || 260;
+      const natH = img.naturalHeight || 180;
+      const size = fitImageSize(natW, natH, 260, 220);
+      const wrapper = document.createElement('div');
+      wrapper.className = 'img-resizable';
+      wrapper.setAttribute('contenteditable','false');
+      wrapper.dataset.natw = natW;
+      wrapper.dataset.nath = natH;
+      wrapper.style.width = size.w+'px';
+      wrapper.style.height = size.h+'px';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+    };
+    if(img.complete && img.naturalWidth){ doWrap(); }
+    else{ img.addEventListener('load', doWrap, {once:true}); }
+  });
+}
+
+// 저장된 내용이 일반 텍스트인지 HTML(이미지 등)인지 판별해서 편집칸에 채워넣기
+function toEditableHtml(raw){
+  if(!raw) return '';
+  if(raw.indexOf('<') !== -1) return raw; // 이미 HTML(이미지 등 포함)
+  return esc(raw).replace(/\n/g,'<br>');
+}
+
+// 편집칸의 내용을 읽어오기 (비어있으면 빈 문자열)
+function getCellContent(el){
+  if(!el) return '';
+  const hasImg = !!el.querySelector('img');
+  const text = el.textContent.replace(/\u200b/g,'').trim();
+  if(!hasImg && text==='') return '';
+  return el.innerHTML.trim();
+}
+
+// 클립보드 붙여넣기: 이미지는 그대로 삽입, 텍스트는 서식 없이 삽입
+document.addEventListener('paste', function(e){
+  const target = e.target;
+  if(!target.classList || !target.classList.contains('rich-input')) return;
+  const cd = e.clipboardData || window.clipboardData;
+  if(!cd) return;
+  const items = cd.items || [];
+  let imageHandled = false;
+  for(let i=0;i<items.length;i++){
+    const item = items[i];
+    if(item.type && item.type.indexOf('image') !== -1){
+      e.preventDefault();
+      imageHandled = true;
+      const blob = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        const dataUrl = ev.target.result;
+        const probe = new Image();
+        probe.onload = function(){
+          const size = fitImageSize(probe.naturalWidth || 300, probe.naturalHeight || 200, 260, 220);
+          document.execCommand('insertHTML', false,
+            '<div class="img-resizable" contenteditable="false" data-natw="'+(probe.naturalWidth||size.w)+'" data-nath="'+(probe.naturalHeight||size.h)+'" style="width:'+size.w+'px;height:'+size.h+'px;">'+
+            '<img src="'+dataUrl+'"></div>');
+        };
+        probe.src = dataUrl;
+      };
+      reader.readAsDataURL(blob);
+    }
+  }
+  if(!imageHandled){
+    e.preventDefault();
+    const text = cd.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  }
+});
+
+function renderCatAdmin(){
+  const box = document.getElementById('catList');
+  box.innerHTML = categories.map((c,i)=>
+    `<span class="cat-chip">${esc(c)} <button onclick="removeCategory(${i})">×</button></span>`
+  ).join('');
+}
+function addCategory(){
+  const input = document.getElementById('a-newcat');
+  const v = input.value.trim();
+  if(!v) return;
+  if(categories.includes(v)){ input.value=''; return; }
+  categories.push(v);
+  save(STORAGE.categories, categories);
+  input.value='';
+  renderWriteTable(); renderCatAdmin();
+}
+function removeCategory(i){
+  categories.splice(i,1);
+  save(STORAGE.categories, categories);
+  renderWriteTable(); renderCatAdmin();
+}
+
+// ---------- 작성자별 팀/업무구분 자동입력 관리 ----------
+function renderAuthorMapAdmin(){
+  const box = document.getElementById('authorMapList');
+  const names = Object.keys(authorMap);
+  if(names.length===0){
+    box.innerHTML = '<span class="hint">등록된 매핑이 없습니다.</span>';
+    return;
+  }
+  box.innerHTML = names.map(name=>
+    `<span class="cat-chip">${esc(name)} → ${esc(authorMap[name])} <button onclick="removeAuthorMapping('${esc(name).replace(/'/g,"\\'")}')">×</button></span>`
+  ).join('');
+}
+function addAuthorMapping(){
+  const nameEl = document.getElementById('a-newauthor');
+  const deptEl = document.getElementById('a-newdept');
+  const name = nameEl.value.trim();
+  const dept = deptEl.value.trim();
+  if(!name || !dept) return;
+  authorMap[name] = dept;
+  save(STORAGE.authorMap, authorMap);
+  nameEl.value=''; deptEl.value='';
+  renderAuthorMapAdmin();
+}
+function removeAuthorMapping(name){
+  delete authorMap[name];
+  save(STORAGE.authorMap, authorMap);
+  renderAuthorMapAdmin();
+}
+
+// ---------- 기존 내용 불러오기 (수정용) ----------
+function loadForEdit(){
+  const author = document.getElementById('f-author').value.trim();
+  const week = document.getElementById('f-week').value;
+  if(!author || !week){
+    showStatus('saveStatus','작성자와 주차를 먼저 입력하세요.','err');
+    return;
+  }
+  const mine = entries.filter(e=>e.author===author && e.week===week);
+  if(mine.length===0){
+    showStatus('saveStatus','해당 작성자·주차로 저장된 내용이 없습니다.','err');
+    renderWriteTable();
+    return;
+  }
+  const deptEl = document.getElementById('f-dept');
+  if(!deptEl.value && mine[0].dept) deptEl.value = mine[0].dept;
+
+  const prefill = {};
+  mine.forEach(e=>{ prefill[e.cat] = { thisWeek: e.thisWeek, nextWeek: e.nextWeek }; });
+  renderWriteTable(prefill);
+  showStatus('saveStatus','기존 내용을 불러왔습니다. 수정 후 저장하면 이전 내용이 교체됩니다.','ok');
+}
+
+// ---------- save entry (전체 양식 일괄 저장 / 기존 내용 교체) ----------
+function saveEntry(){
+  const author = document.getElementById('f-author').value.trim();
+  const dept = document.getElementById('f-dept').value.trim();
+  const week = document.getElementById('f-week').value;
+
+  if(!author || !week){
+    showStatus('saveStatus','작성자와 주차는 필수입니다.','err');
+    return;
+  }
+
+  const newEntries = [];
+  categories.forEach((cat,i)=>{
+    const thisEl = document.getElementById('w-this-'+i);
+    const nextEl = document.getElementById('w-next-'+i);
+    const thisWeek = getCellContent(thisEl);
+    const nextWeek = getCellContent(nextEl);
+    if(!thisWeek && !nextWeek) return;
+    newEntries.push({
+      id: Date.now().toString(36)+'-'+i,
+      author, dept, week, cat, thisWeek, nextWeek,
+      ts: new Date().toISOString()
+    });
+  });
+
+  if(newEntries.length===0){
+    showStatus('saveStatus','입력된 내용이 없습니다. 최소 한 항목은 작성해주세요.','err');
+    return;
+  }
+
+  // 같은 작성자·주차의 기존 내용은 새 내용으로 교체
+  entries = entries.filter(e=> !(e.author===author && e.week===week));
+  entries.push(...newEntries);
+  save(STORAGE.entries, entries);
+  showStatus('saveStatus','로컬에 저장되었습니다. ('+newEntries.length+'건)','ok');
+
+  if(scriptUrl){
+    syncToSheet(newEntries, author, week);
+  }
+
+  renderWriteTable();
+}
+
+function clearForm(){
+  if(!confirm('작성 중인 모든 내용을 지우시겠습니까?')) return;
+  renderWriteTable();
+}
+
+// ---------- sheets sync ----------
+function updateSyncBadge(){
+  const badge = document.getElementById('syncBadge');
+  if(scriptUrl){
+    badge.textContent = 'Google Sheets 연동됨';
+    badge.style.color = '#8FE0C0';
+  }else{
+    badge.textContent = '시트 연동 안 됨';
+    badge.style.color = '#B9C6D6';
+  }
+}
+
+async function syncToSheet(entryList, author, week){
+  const header = ['작성일시','작성자','부서','주차','구분','금주 진행','차주 예정'];
+  const rows = entryList.map(entry=>[entry.ts, entry.author, entry.dept, entry.week, entry.cat, stripToPlainText(entry.thisWeek), stripToPlainText(entry.nextWeek)]);
+  try{
+    const res = await fetch(scriptUrl, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ header, rows, replaceAuthor: author, replaceWeek: week })
+    });
+    const data = await res.json();
+    if(data.result === 'ok'){
+      showStatus('saveStatus','로컬 저장 + Google Sheets 전송 완료 ('+rows.length+'건)','ok');
+    }else{
+      showStatus('saveStatus','로컬 저장은 완료. Sheets 전송 실패: '+(data.message||'알 수 없는 오류'),'err');
+    }
+  }catch(err){
+    showStatus('saveStatus','로컬 저장은 완료. Sheets 전송 실패: '+err.message,'err');
+  }
+}
+
+function saveUrl(){
+  scriptUrl = document.getElementById('a-url').value.trim();
+  save(STORAGE.url, scriptUrl);
+  updateSyncBadge();
+  showStatus('urlStatus','URL이 저장되었습니다.','ok');
+}
+
+async function testConnection(){
+  const url = document.getElementById('a-url').value.trim();
+  if(!url){ showStatus('urlStatus','URL을 먼저 입력하세요.','err'); return; }
+  showStatus('urlStatus','연결 확인 중...','wait');
+  try{
+    const res = await fetch(url, {method:'GET'});
+    const data = await res.json();
+    if(data.result === 'ok'){
+      showStatus('urlStatus','연결 성공: '+ (data.message||'') ,'ok');
+    }else{
+      showStatus('urlStatus','응답은 왔지만 형식이 예상과 다릅니다.','err');
+    }
+  }catch(err){
+    showStatus('urlStatus','연결 실패: '+err.message,'err');
+  }
+}
+
+// ---------- list (현황표 전용) ----------
+async function renderList(){
+  let weeks = [...new Set(entries.map(e=>e.week))].sort().reverse();
+
+  if(scriptUrl){
+    try{
+      const res = await fetch(scriptUrl + '?action=weeks');
+      const data = await res.json();
+      if(data.result==='ok' && Array.isArray(data.weeks)){
+        weeks = [...new Set([...data.weeks, ...weeks])].sort().reverse();
+      }
+    }catch(err){
+      // 오프라인이거나 실패 시 로컬 데이터로만 표시
+    }
+  }
+
+  const reportWeekSel = document.getElementById('report-week');
+  const prev = reportWeekSel.value;
+  reportWeekSel.innerHTML = weeks.map(w=>`<option value="${w}">${w}</option>`).join('');
+  if(weeks.includes(prev)){
+    reportWeekSel.value = prev;
+  }else if(weeks.length>0){
+    reportWeekSel.value = weeks[0];
+  }
+  renderReport();
+}
+
+// ---------- 항목 내용 렌더링 (표 구문 지원) ----------
+function contentToHtml(raw){
+  if(!raw) return '';
+  if(raw.indexOf('<') !== -1){
+    // contenteditable에서 저장된 HTML(이미지 등 포함) — 그대로 출력
+    return raw;
+  }
+  const lines = raw.split('\n');
+  let html = '';
+  let i = 0;
+  while(i < lines.length){
+    if(lines[i].includes('|')){
+      const tableLines = [];
+      while(i < lines.length && lines[i].includes('|')){
+        tableLines.push(lines[i]);
+        i++;
+      }
+      html += pipeLinesToTable(tableLines);
+    }else{
+      if(lines[i].trim() !== ''){
+        html += `<div>${esc(lines[i])}</div>`;
+      }
+      i++;
+    }
+  }
+  return html;
+}
+
+function pipeLinesToTable(tableLines){
+  const rows = tableLines
+    .filter(l => !/^[\s|:\-]+$/.test(l))
+    .map(l=>{
+      let cells = l.split('|').map(c=>c.trim());
+      if(cells[0]==='') cells.shift();
+      if(cells.length && cells[cells.length-1]==='') cells.pop();
+      return cells;
+    })
+    .filter(r=>r.length>0);
+  if(rows.length===0) return '';
+  const [headerRow, ...bodyRows] = rows;
+  let html = '<table class="mini-table"><thead><tr>';
+  headerRow.forEach(c=> html += `<th>${esc(c)}</th>`);
+  html += '</tr></thead><tbody>';
+  bodyRows.forEach(r=>{
+    html += '<tr>';
+    r.forEach(c=> html += `<td>${esc(c)}</td>`);
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+// ---------- 현황표 (이미지 양식 재구성) ----------
+async function renderReport(){
+  const week = document.getElementById('report-week').value;
+  const out = document.getElementById('reportOutput');
+  if(!week){
+    out.innerHTML = '<div class="empty">주차를 선택하세요.</div>';
+    return;
+  }
+  out.innerHTML = '<div class="empty">불러오는 중...</div>';
+
+  let grouped = null;   // Google Sheets에서 불러온 경우: { cat: {thisWk:[...], nextWk:[...]} }
+  let catOrder = null;
+
+  if(scriptUrl){
+    try{
+      const res = await fetch(scriptUrl + '?action=report&week=' + encodeURIComponent(week));
+      const data = await res.json();
+      if(data.result==='ok' && Array.isArray(data.categories)){
+        grouped = data.data || {};
+        catOrder = data.categories;
+      }
+    }catch(err){
+      // 서버 조회 실패 시 이 브라우저에 저장된 내용으로 대체 표시
+    }
+  }
+
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}. ${String(today.getMonth()+1).padStart(2,'0')}. ${String(today.getDate()).padStart(2,'0')}`;
+
+  let displayCats = categories.slice();
+  if(catOrder){
+    catOrder.forEach(c=>{ if(!displayCats.includes(c)) displayCats.push(c); });
+  }
+
+  const rows = displayCats.map(cat=>{
+    let thisList, nextList;
+    if(grouped){
+      const g = grouped[cat] || {thisWk:[],nextWk:[]};
+      thisList = (g.thisWk||[]).map(t=>`<div class="entry-block">${contentToHtml(t)}</div>`).join('');
+      nextList = (g.nextWk||[]).map(t=>`<div class="entry-block">${contentToHtml(t)}</div>`).join('');
+    }else{
+      const items = entries.filter(e=>e.week===week && e.cat===cat);
+      thisList = items.filter(i=>i.thisWeek).map(i=>`<div class="entry-block">${contentToHtml(i.thisWeek)}</div>`).join('');
+      nextList = items.filter(i=>i.nextWeek).map(i=>`<div class="entry-block">${contentToHtml(i.nextWeek)}</div>`).join('');
+    }
+    return `<tr>
+      <td class="rep-cat">${esc(cat)}</td>
+      <td class="rep-cell">${thisList||''}</td>
+      <td class="rep-cell">${nextList||''}</td>
+    </tr>`;
+  }).join('');
+
+  out.innerHTML = `
+    <div class="report-sheet">
+      <div class="report-title">${esc(appTitle)}</div>
+      <div class="report-date">[작성 일자 : ${dateStr}]</div>
+      <table class="report-table">
+        <thead><tr><th>구분</th><th>금주 진행</th><th>차주 예정</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function printReport(){
+  const sheet = document.querySelector('.report-sheet');
+  if(!sheet){
+    alert('먼저 "현황표 만들기"를 눌러 미리보기를 생성해주세요.');
+    return;
+  }
+
+  // 내용량에 맞춰 글자 크기(및 그에 연동된 여백)를 자동 조정 — 많으면 축소, 적으면 확대해 한 페이지를 채움
+  const baseFontPx = 13;
+  const minFontPx = 8;
+  const maxScale = 1.8;
+  const targetHeightPx = 1000; // A4 한 페이지 인쇄 가능 영역 근사치
+  sheet.style.fontSize = baseFontPx + 'px';
+
+  const naturalHeight = sheet.scrollHeight;
+  const rawScale = targetHeightPx / naturalHeight;
+  const minScale = minFontPx / baseFontPx;
+  const finalScale = Math.min(Math.max(rawScale, minScale), maxScale);
+  sheet.style.fontSize = Math.round(baseFontPx * finalScale * 10) / 10 + 'px';
+
+  // 이미지(캡처 첨부) 박스는 px 고정 크기라 글자 크기와 별개로 같은 비율로 함께 조정
+  sheet.querySelectorAll('.img-resizable').forEach(img=>{
+    if(!img.dataset.origW){
+      img.dataset.origW = parseFloat(img.style.width) || img.offsetWidth;
+      img.dataset.origH = parseFloat(img.style.height) || img.offsetHeight;
+    }
+    const w = parseFloat(img.dataset.origW);
+    const h = parseFloat(img.dataset.origH);
+    img.style.width = Math.round(w * finalScale) + 'px';
+    img.style.height = Math.round(h * finalScale) + 'px';
+  });
+
+  setTimeout(()=>{ window.print(); }, 30);
+}
+
+window.addEventListener('afterprint', function(){
+  const sheet = document.querySelector('.report-sheet');
+  if(!sheet) return;
+  sheet.style.fontSize = '';
+  sheet.querySelectorAll('.img-resizable').forEach(img=>{
+    if(img.dataset.origW){ img.style.width = img.dataset.origW + 'px'; delete img.dataset.origW; }
+    if(img.dataset.origH){ img.style.height = img.dataset.origH + 'px'; delete img.dataset.origH; }
+  });
+});
+
+function stripToPlainText(raw){
+  if(!raw) return '';
+  if(raw.indexOf('<') === -1) return raw;
+  const div = document.createElement('div');
+  div.innerHTML = raw;
+  div.querySelectorAll('img').forEach(img=>{
+    img.replaceWith(document.createTextNode('[이미지]'));
+  });
+  div.querySelectorAll('br').forEach(br=>{
+    br.replaceWith(document.createTextNode('\n'));
+  });
+  div.querySelectorAll('div,p,tr').forEach(el=>{
+    el.insertAdjacentText('afterend','\n');
+  });
+  div.querySelectorAll('td,th').forEach(el=>{
+    el.insertAdjacentText('afterend',' | ');
+  });
+  return div.textContent.replace(/\n{2,}/g,'\n').replace(/[ \t]+\n/g,'\n').trim();
+}
+
+function exportCSV(){
+  if(entries.length===0){ alert('내보낼 데이터가 없습니다.'); return; }
+  const header = ['작성일시','작성자','부서','주차','구분','금주 진행','차주 예정'];
+  const rows = entries.map(e=>[e.ts,e.author,e.dept,e.week,e.cat,stripToPlainText(e.thisWeek),stripToPlainText(e.nextWeek)]);
+  const csv = [header, ...rows].map(r=>
+    r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')
+  ).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'worklog_'+new Date().toISOString().slice(0,10)+'.csv';
+  link.click();
+}
+
+// ---------- admin misc ----------
+function saveTitle(){
+  appTitle = document.getElementById('a-title').value.trim() || '주간업무일지';
+  save(STORAGE.title, appTitle);
+  document.getElementById('appTitle').textContent = appTitle;
+  document.getElementById('writeCardTitle').textContent = appTitle;
+}
+
+function clearAllData(){
+  if(!confirm('저장된 모든 업무일지를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+  entries = [];
+  save(STORAGE.entries, entries);
+  renderList();
+  alert('삭제되었습니다.');
+}
+
+const APPS_SCRIPT_CODE = `var RAW_SHEET = '원본데이터';
+var REPORT_PREFIX = '현황표_';
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+
+    if (!e.postData || !e.postData.contents) {
+      throw new Error("요청 본문이 없습니다.");
+    }
+
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var raw = ss.getSheetByName(RAW_SHEET) || ss.insertSheet(RAW_SHEET);
+
+    if (raw.getLastRow() === 0 && data.header) {
+      raw.appendRow(data.header);
+    }
+
+    try { raw.showColumns(1, 4); raw.hideColumns(1, 4); } catch (colErr) {}
+
+    if (data.replaceAuthor && data.replaceWeek) {
+      removeRows(raw, data.replaceAuthor, data.replaceWeek);
+    }
+
+    if (Array.isArray(data.rows) && data.rows.length > 0) {
+      var startRow = raw.getLastRow() + 1;
+      var numCols = data.rows[0].length;
+      raw.getRange(startRow, 1, data.rows.length, numCols).setValues(data.rows);
+    }
+
+    var weeksToRebuild = [];
+    if (data.replaceWeek) weeksToRebuild.push(data.replaceWeek);
+    if (Array.isArray(data.rows)) {
+      data.rows.forEach(function(r){
+        var w = r[3]; // 작성일시,작성자,부서,주차,구분,금주 진행,차주 예정
+        if (weeksToRebuild.indexOf(w) === -1) weeksToRebuild.push(w);
+      });
+    }
+    weeksToRebuild.forEach(function(w){ buildReportSheet(ss, raw, w); });
+
+    return ContentService
+      .createTextOutput(JSON.stringify({result: "ok"}))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({result: "error", message: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function removeRows(raw, author, week) {
+  var data = raw.getDataRange().getValues();
+  if (data.length < 2) return;
+  var header = data[0];
+  var aIdx = header.indexOf('작성자');
+  var wIdx = header.indexOf('주차');
+  for (var i = data.length - 1; i >= 1; i--) {
+    if (data[i][aIdx] === author && data[i][wIdx] === week) {
+      raw.deleteRow(i + 1);
+    }
+  }
+}
+
+function buildReportSheet(ss, raw, week) {
+  var data = raw.getDataRange().getValues();
+  var header = data[0];
+  var idx = {
+    author: header.indexOf('작성자'),
+    week: header.indexOf('주차'),
+    cat: header.indexOf('구분'),
+    thisWk: header.indexOf('금주 진행'),
+    nextWk: header.indexOf('차주 예정')
+  };
+
+  var order = [];
+  var grouped = {};
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (row[idx.week] !== week) continue;
+    var cat = row[idx.cat];
+    if (!grouped[cat]) { grouped[cat] = { thisWk: [], nextWk: [] }; order.push(cat); }
+    var author = row[idx.author];
+    if (row[idx.thisWk]) grouped[cat].thisWk.push('· ' + row[idx.thisWk]);
+    if (row[idx.nextWk]) grouped[cat].nextWk.push('· ' + row[idx.nextWk]);
+  }
+
+  var sheetName = REPORT_PREFIX + week;
+  var sheet = ss.getSheetByName(sheetName);
+  if (sheet) ss.deleteSheet(sheet);
+  sheet = ss.insertSheet(sheetName);
+
+  sheet.setColumnWidth(1, 140);
+  sheet.setColumnWidth(2, 320);
+  sheet.setColumnWidth(3, 320);
+
+  sheet.getRange('A1:C1').merge();
+  sheet.getRange('A1').setValue('행정실 주요업무 진행현황')
+    .setFontSize(18).setFontWeight('bold').setHorizontalAlignment('center');
+  sheet.setRowHeight(1, 40);
+
+  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy. MM. dd');
+  sheet.getRange('A2:C2').merge();
+  sheet.getRange('A2').setValue('[작성 일자 : ' + today + ']')
+    .setHorizontalAlignment('right').setFontSize(10);
+
+  var headerRow = 3;
+  sheet.getRange(headerRow, 1, 1, 3).setValues([['구분', '금주 진행', '차주 예정']]);
+  sheet.getRange(headerRow, 1, 1, 3)
+    .setFontWeight('bold').setHorizontalAlignment('center')
+    .setBackground('#1F6E6E').setFontColor('#FFFFFF');
+
+  var r = headerRow + 1;
+  order.forEach(function(cat) {
+    var g = grouped[cat];
+    sheet.getRange(r, 1).setValue(cat).setFontWeight('bold')
+      .setHorizontalAlignment('center').setVerticalAlignment('middle');
+    sheet.getRange(r, 2).setValue(g.thisWk.join('\\n')).setWrap(true).setVerticalAlignment('top');
+    sheet.getRange(r, 3).setValue(g.nextWk.join('\\n')).setWrap(true).setVerticalAlignment('top');
+    sheet.setRowHeight(r, 90);
+    r++;
+  });
+
+  var lastRow = r - 1;
+  if (lastRow >= headerRow) {
+    sheet.getRange(headerRow, 1, lastRow - headerRow + 1, 3)
+      .setBorder(true, true, true, true, true, true);
+  }
+}
+
+function doGet(e) {
+  try {
+    var action = e.parameter.action;
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var raw = ss.getSheetByName(RAW_SHEET);
+
+    if (action === 'weeks') {
+      return jsonOut({ result: 'ok', weeks: listRecentWeeks(raw) });
+    }
+    if (action === 'report') {
+      var week = e.parameter.week;
+      var rep = getReportData(raw, week);
+      return jsonOut({ result: 'ok', week: week, categories: rep.order, data: rep.grouped });
+    }
+    return jsonOut({ result: 'ok', message: '연결 성공!' });
+  } catch (err) {
+    return jsonOut({ result: 'error', message: err.toString() });
+  }
+}
+
+function jsonOut(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function listRecentWeeks(raw) {
+  if (!raw) return [];
+  var data = raw.getDataRange().getValues();
+  if (data.length < 2) return [];
+  var header = data[0];
+  var wIdx = header.indexOf('주차');
+  var seen = {};
+  var weeks = [];
+  for (var i = 1; i < data.length; i++) {
+    var w = data[i][wIdx];
+    if (w && !seen[w]) { seen[w] = true; weeks.push(w); }
+  }
+  weeks.sort().reverse();
+  return weeks.slice(0, 6); // 최근 약 1개월(6주)
+}
+
+function getReportData(raw, week) {
+  var order = [];
+  var grouped = {};
+  if (!raw || !week) return { order: order, grouped: grouped };
+  var data = raw.getDataRange().getValues();
+  var header = data[0];
+  var idx = {
+    cat: header.indexOf('구분'),
+    week: header.indexOf('주차'),
+    thisWk: header.indexOf('금주 진행'),
+    nextWk: header.indexOf('차주 예정')
+  };
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (row[idx.week] !== week) continue;
+    var cat = row[idx.cat];
+    if (!grouped[cat]) { grouped[cat] = { thisWk: [], nextWk: [] }; order.push(cat); }
+    if (row[idx.thisWk]) grouped[cat].thisWk.push(String(row[idx.thisWk]));
+    if (row[idx.nextWk]) grouped[cat].nextWk.push(String(row[idx.nextWk]));
+  }
+  return { order: order, grouped: grouped };
+}`;
+
+function copyScript(){
+  navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(()=>{
+    alert('Apps Script 코드가 복사되었습니다. script.google.com에 붙여넣으세요.');
+  });
+}
+
+function showStatus(id, msg, type){
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status '+type;
+  if(type==='ok'){
+    setTimeout(()=>{ el.style.display='none'; el.className='status'; }, 4000);
+  }
+}
+
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+</script>
+
+</body>
+</html>
